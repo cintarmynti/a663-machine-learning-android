@@ -48,6 +48,29 @@ class ImageClassifierHelper(
         }
     }
 
+    // Fungsi untuk klasifikasi gambar dari galeri (Bitmap)
+    fun classifyBitmap(bitmap: Bitmap) {
+        if (imageClassifier == null) {
+            setupImageClassifier()
+        }
+
+        val imageProcessor = org.tensorflow.lite.support.image.ImageProcessor.Builder()
+            .add(ResizeOp(224, 224, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
+            .add(CastOp(DataType.UINT8))
+            .build()
+
+        val tensorImage = imageProcessor.process(TensorImage.fromBitmap(bitmap))
+
+        var inferenceTime = SystemClock.uptimeMillis()
+        val results = imageClassifier?.classify(tensorImage)
+        inferenceTime = SystemClock.uptimeMillis() - inferenceTime
+        classifierListener?.onResults(
+            results,
+            inferenceTime
+        )
+    }
+
+    // Fungsi untuk klasifikasi gambar dari kamera (ImageProxy)
     fun classifyImage(image: ImageProxy) {
         if (imageClassifier == null) {
             setupImageClassifier()
@@ -74,6 +97,7 @@ class ImageClassifierHelper(
     }
 
     private fun toBitmap(image: ImageProxy): Bitmap {
+        // Convert ImageProxy ke Bitmap sesuai metode yang benar
         val bitmapBuffer = Bitmap.createBitmap(
             image.width,
             image.height,

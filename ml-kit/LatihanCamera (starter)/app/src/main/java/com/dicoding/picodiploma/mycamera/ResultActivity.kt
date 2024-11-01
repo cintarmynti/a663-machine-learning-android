@@ -16,12 +16,20 @@ class ResultActivity : AppCompatActivity() {
         binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val imageUri = Uri.parse(intent.getStringExtra(EXTRA_IMAGE_URI))
-        imageUri?.let {
-            Log.d("Image URI", "showImage: $it")
-            binding.resultImage.setImageURI(it)
+        // Retrieve the image URI and result data from intent extras
+        val imageUriString = intent.getStringExtra(EXTRA_IMAGE_URI)
+        val resultText = intent.getStringExtra(EXTRA_RESULT) ?: "No results available"
+
+        if (imageUriString != null) {
+            val imageUri = Uri.parse(imageUriString)
+            Log.d("Image URI", "showImage: $imageUri")
+            binding.resultImage.setImageURI(imageUri)
+        } else {
+            Log.e("ResultActivity", "Image URI is null")
         }
 
+        // Display the result text
+        binding.resultTextView.text = resultText
     }
 
     companion object {

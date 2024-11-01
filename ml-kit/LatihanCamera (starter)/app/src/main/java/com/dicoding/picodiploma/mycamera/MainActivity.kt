@@ -3,6 +3,8 @@ package com.dicoding.picodiploma.mycamera
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -14,11 +16,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.dicoding.picodiploma.mycamera.CameraActivity.Companion.CAMERAX_RESULT
 import com.dicoding.picodiploma.mycamera.databinding.ActivityMainBinding
+import org.tensorflow.lite.task.vision.classifier.Classifications
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
     private var currentImageUri: Uri? = null
 
     private val requestPermissionLauncher =
@@ -52,10 +54,8 @@ class MainActivity : AppCompatActivity() {
         binding.cameraXButton.setOnClickListener { startCameraX() }
         binding.analyzeButton.setOnClickListener {
             currentImageUri?.let {
-                analyzeImage(it)
-            } ?: run {
-                showToast(getString(R.string.empty_image_warning))
-            }
+                analyzeImageFromUri(it)
+            } ?: showToast(getString(R.string.empty_image_warning))
         }
     }
 
@@ -108,10 +108,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun analyzeImage(uri: Uri) {
-        val intent = Intent(this, ResultActivity::class.java)
-        intent.putExtra(ResultActivity.EXTRA_IMAGE_URI, currentImageUri.toString())
-        startActivity(intent)
+    private fun analyzeImageFromUri(uri: Uri) {
+        val bitmap = getBitmapFromUri(uri)
+        bitmap?.let {
+            val imageClassifierHelper = ImageClassifierHelper(
+                context = this,
+                classifierListener = object : ImageClassifierHelper.ClassifierListener {
+                    override fun onError(error: String) {
+                        showToast(error)
+                    }
+
+                    override fun onResults(results: List<Classifications>?, inferenceTime: Long) {
+                        // Kirim hasil analisis ke ResultActivity
+                        val intent = Intent(this@MainActivity, ResultActivity::class.java)
+                        intent.putExtra(ResultActivity.EXTRA_IMAGE_URI, uri.toString())
+                        intent.putExtra(ResultActivity.EXTRA_RESULT, formatResults(results, inferenceTime))
+                        startActivity(intent)
+                    }
+                }
+            )
+            // Klasifikasi gambar dari bitmap
+            imageClassifierHelper.classifyBitmap(it)
+        } ?: showToast("Gagal memuat gambar")
+    }
+
+    private fun getBitmapFromUri(uri: Uri): Bitmap? {
+        return try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                BitmapFactory.decodeStream(inputStream)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error loading bitmap from URI", e)
+            null
+        }
+    }
+
+    private fun formatResults(results: List<Classifications>?, inferenceTime: Long): String {
+        results?.let {
+            return it[0].categories.joinToString("\n") { category ->
+                "${category.label}: ${category.score * 100}%"
+            } + "\nWaktu Inferensi: $inferenceTime ms"
+        }
+        return "Hasil tidak ditemukan"
     }
 
     private fun showToast(message: String) {

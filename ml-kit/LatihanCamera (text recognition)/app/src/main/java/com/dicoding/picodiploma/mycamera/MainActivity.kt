@@ -23,7 +23,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
     private var currentImageUri: Uri? = null
 
     private val requestPermissionLauncher =

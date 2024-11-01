@@ -1,4 +1,5 @@
 <resources>
+    <string name="image_classifier_failed">Klasifikasi gambar gagal</string>
     <string name="app_name">MyCamera</string>
     <string name="camera_x">CameraX</string>
     <string name="camera">Kamera</string>

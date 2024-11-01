@@ -52,6 +52,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.1")
+    implementation ("com.google.guava:guava:30.1.1-android")
 
     val cameraxVersion = "1.3.0"
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
